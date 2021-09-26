@@ -1,0 +1,242 @@
+/*
+Gramatica para el Robot:
+Autor: Alejandro Arango
+Modificado por: Silvia Takahashi
+Modificado por: Juan Pablo Morales.
+Agregadas producciones para manejar globos
+Modificado por Silvia Takahashi
+Eliminadas producciones para manejar globos
+Agregado el esqueleto para la traduccion
+Modificado por Silvia Takahashi 
+Re: Agregar Reglas para el manejo de globos
+Modificado por Saulo Daza y Sonia Vivas
+Modificado por Silvia Takahashi
+Eliminadas reglas de traducci�n DE  MARCROS
+Cambio del lenguaje de comandos
+Modificado por Silvia Takahashi: algunas Reglas para traduccion
+Modificado por Silvia Takahashi: Cambio en el lenguaje
+Abril: 2008 - Simplificado apra solo interpretaci�n
+ **/
+
+options 
+{
+	LOOKAHEAD=1; 
+	IGNORE_CASE=true;
+	STATIC = false;
+	
+}
+   
+
+PARSER_BEGIN(Robot)
+
+package uniandes.lym.robot.control;
+
+import uniandes.lym.robot.kernel.*;
+import java.awt.Point;
+import java.io.*;
+import java.util.Vector;
+import java.util.LinkedList;
+import java.util.HashMap;
+
+@SuppressWarnings("serial")
+public class Robot 
+{
+/* mapa para guardar las variables globales durante la ejecucion del programa */
+	private HashMap<String, Integer > userVals = new HashMap< String, Integer>();
+	private RobotWorldDec world;
+	String salida=new String();
+	StringBuffer salidaS;
+	Boolean bufferInstanced = false;
+	void setWorld(RobotWorld w) {
+		world = (RobotWorldDec) w;	
+	}
+
+
+}
+PARSER_END(Robot)
+
+SKIP:
+{
+		" "
+	|	"\r"
+	|	"\t"
+}
+
+/* Definicion de comandos basicos */
+TOKEN: 
+{
+		   <MOVE :  "MOVE">
+		|  <RIGHT: "RIGHT">
+		|  <LEFT: "LEFT">
+		|  <ROTATE: "ROTATE">
+		|  < LOOK: "LOOK" >
+		|  < N : "N" >
+		|  < E : "E" >
+		|  < W : "W" >
+		|  < S : "S" >
+		|  < DROP : "DROP" >
+		|  < FREE : "FREE" >
+		|  < PICK : "PICK" >
+		|  < POP : "POP" >
+		|  < CHECK : "CHECK" >
+		|  < C : "C" >
+		|  < B : "B" >
+		|  < BLOCKED : "BLOCKED" >
+		|  < NOP : "NOP" >
+		|  < BLOCK : "BLOCK" >
+		|  < REPEAT : "REPEAT" >
+		|  < IF : "IF" >
+		|  < DEFINE : "DEFINE" >
+		|  < TO : "TO" >
+		|  < OUTPUT : "OUTPUT" >
+		|  < END : "END" >
+}
+
+TOKEN :
+{
+		<NUMERO: (<DIGIT>)+ >
+	    | <VARIABLE : (< LETTER >)+>
+		| <#DIGIT: ["0"-"9"] >
+		| <#LETTER: ["a"-"z"]>
+} 
+
+
+//-----------------------------------------------------------------------------------------------
+
+boolean command(StringBuffer sistema):
+	{		
+		int x;
+		salida=new String();
+		if(bufferInstanced == false) {
+		  salidaS = sistema;
+		  bufferInstanced = true;
+		}
+	}
+	{
+		(
+			(    
+			   <MOVE>   x = numero() //{world.moveForward(x);salida = "Command: Moveforward ";}  
+	    	|  <RIGHT>  x = numero() //{world.turnRight();salida = "Command: Turnright";}
+			|  <LEFT>   x = numero()
+			|  <ROTATE> x = numero()
+			|  <DROP>   x = numero()
+			|  <FREE>   x = numero()
+			|  <PICK>   x = numero()
+		    |  <POP>    x = numero() //{world.popBalloons(x); salida = "Comando:  Pop";}
+		    |  <BLOCKED>
+		    |  <NOP>
+		    |  <LOOK>   ("N"|"E"|"W"|"S")
+		    |  <CHECK>  ("C"|"B") x = numero()
+		    |  block()
+		    |  repeat()
+		    |  conditional()
+//		    |  define()
+//		    |  function()
+			) "\n"
+        )+
+		{
+		  //  try {
+	      //  Thread.sleep(1);
+	      //  }catch (InterruptedException e) {
+	      //   System.err.format("IOException: %s%n", e);
+	      //  }
+		salidaS.append(salida);
+		return true;
+		}
+     |  "\n" { return true; }
+	 | <EOF> {return false;} 
+	}
+
+//void objetoPoner() :
+//	{
+//		int f=1;	
+//	}
+//	{
+//		( <T_CHIPS>    "," f=numero() {world.putChips(f); salida = "Command:  Put Chips"; })
+//		|  	  ( <T_BALLOONS>   "," f=numero() {world.putBalloons(f); salida = "Command:  Put Balloons";})	 
+//
+//	} 
+//
+//void objetoRecoger() :
+//	{
+//		int f=1;	
+//	}
+//	{
+//		( <T_CHIPS>   "," f=numero() {world.pickChips(f);salida = "Command:  Pick chips";})
+//		|  	  ( <T_BALLOONS>   "," f=numero() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
+//
+//	}
+
+	/**
+	 *  reconoce un numero entero sin signo
+	 * @return el valor entero correspondiente al valor reconocido
+	 */
+
+int numero() throws Error:
+	{	
+		int total=1;
+	}
+	{
+		<NUMERO>
+		{
+			try 
+			{
+				total = Integer.parseInt(token.image);
+			} 
+			catch (NumberFormatException ee) 
+			{
+				// Dada la forma de NUMERO, sabemos que solo puede tener d�gitos
+				// Por lo tanto, lo unico que podria pasar es que el numero sea muy grande
+				throw new Error("Number out of bounds: "+token.image+"!!");
+			}
+			return total;
+		}
+	}
+
+void block():
+{
+}
+{
+  "("
+  	<BLOCK>
+  	(
+  	 command(salidaS)"\n"  	)+
+  ")"
+}
+
+void repeat():
+{
+}
+{
+  <REPEAT>
+   numero()
+  "["
+  	(  	  command(salidaS) "\n"
+  	)+
+  "]"
+}
+
+void conditional():
+{
+}
+{
+  <IF>
+  <BLOCKED>
+  "["
+    (     command(salidaS) "\n"
+    )+
+  "]"
+  
+}
+
+//void define():
+//{
+//}
+//{
+//}
+//
+//void function():
+//{
+//}
+//{
+//}
