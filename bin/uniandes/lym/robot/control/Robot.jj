@@ -20,7 +20,7 @@ Abril: 2008 - Simplificado apra solo interpretaci�n
 
 options 
 {
-	LOOKAHEAD=1; 
+	LOOKAHEAD=2; 
 	IGNORE_CASE=true;
 	STATIC = false;
 	
@@ -43,15 +43,20 @@ public class Robot
 {
 /* mapa para guardar las variables globales durante la ejecucion del programa */
 	private HashMap<String, Integer > userVals = new HashMap< String, Integer>();
+/* mapa para guardar las definiciones de las funciones y sus parametros*/
+    private HashMap<String,LinkedList<String>> functions = new HashMap<String,LinkedList<String>>();
+/* referencia al mundo del robot*/
 	private RobotWorldDec world;
+/* String de salidas del parsers*/
 	String salida=new String();
-	StringBuffer salidaS;
+/* referencia al buffer global donde se van a append todas las salidas del parser*/
+	private StringBuffer salidaS;
+/* boolean para saber si el buffer global ya fue instanciado (asegura que sea el mismo durante la ejecucion del programa)*/
 	Boolean bufferInstanced = false;
+                                    
 	void setWorld(RobotWorld w) {
 		world = (RobotWorldDec) w;	
 	}
-
-
 }
 PARSER_END(Robot)
 
@@ -81,7 +86,7 @@ TOKEN:
 		|  < CHECK : "CHECK" >
 		|  < C : "C" >
 		|  < B : "B" >
-		|  < BLOCKED : "BLOCKED" >
+		|  < BLOCKEDP : "BLOCKEDP" >
 		|  < NOP : "NOP" >
 		|  < BLOCK : "BLOCK" >
 		|  < REPEAT : "REPEAT" >
@@ -113,26 +118,29 @@ boolean command(StringBuffer sistema):
 		}
 	}
 	{
-		(
+		 (
+		    (
 			(    
-			   <MOVE>   x = numero() //{world.moveForward(x);salida = "Command: Moveforward ";}  
-	    	|  <RIGHT>  x = numero() //{world.turnRight();salida = "Command: Turnright";}
-			|  <LEFT>   x = numero()
-			|  <ROTATE> x = numero()
-			|  <DROP>   x = numero()
-			|  <FREE>   x = numero()
-			|  <PICK>   x = numero()
-		    |  <POP>    x = numero() //{world.popBalloons(x); salida = "Comando:  Pop";}
-		    |  <BLOCKED>
+			   <MOVE>   numero() //{world.moveForward(x);salida = "Command: Moveforward ";}  
+	    	|  <RIGHT>  numero() //{world.turnRight();salida = "Command: Turnright";}
+			|  <LEFT>   numero()
+			|  <ROTATE> numero()
+			|  <DROP>   numero()
+			|  <FREE>   numero()
+			|  <PICK>   numero()
+		    |  <POP>    numero() //{world.popBalloons(x); salida = "Comando:  Pop";}
+		    |  <BLOCKEDP>
 		    |  <NOP>
 		    |  <LOOK>   ("N"|"E"|"W"|"S")
-		    |  <CHECK>  ("C"|"B") x = numero()
+		    |  <CHECK>  ("C"|"B") numero()
 		    |  block()
 		    |  repeat()
 		    |  conditional()
-//		    |  define()
-//		    |  function()
-			) "\n"
+		    |  define()
+		    |  function()
+//		    |  userDefinitions()
+			) "\n")
+     	|  "\n"
         )+
 		{
 		  //  try {
@@ -143,8 +151,7 @@ boolean command(StringBuffer sistema):
 		salidaS.append(salida);
 		return true;
 		}
-     |  "\n" { return true; }
-	 | <EOF> {return false;} 
+	    | <EOF> {return false; }
 	}
 
 //void objetoPoner() :
@@ -167,29 +174,36 @@ boolean command(StringBuffer sistema):
 //
 //	}
 
-	/**
-	 *  reconoce un numero entero sin signo
-	 * @return el valor entero correspondiente al valor reconocido
-	 */
 
+/**
+* reconoce un numero entero sin signo
+* @return el valor entero correspondiente al valor reconocido
+* VERIFICA SI LA ENTRADA ES UN NUMERO O UNA VARIABLE PREVIAMENTE DEFINIDA POR EL USUARIO.
+*/
 int numero() throws Error:
 	{	
-		int total=1;
+		Integer total;
 	}
 	{
-		<NUMERO>
+		(<NUMERO>| <VARIABLE>)
 		{
-			try 
-			{
-				total = Integer.parseInt(token.image);
-			} 
-			catch (NumberFormatException ee) 
-			{
-				// Dada la forma de NUMERO, sabemos que solo puede tener d�gitos
-				// Por lo tanto, lo unico que podria pasar es que el numero sea muy grande
-				throw new Error("Number out of bounds: "+token.image+"!!");
+		  	// si entra al if el numero esta definido por medio de una variable.
+		  	total = userVals.get(token.image);
+		  	if(total!=null) {
+		  	  return total;
+		  	}
+		  	//si no entonces debe ser un numero explicito.
+		  	else {
+		  	  	try 
+				{
+					total = Integer.parseInt(token.image);
+					return total;
+				} 
+				catch (Exception e) 
+				{
+				  throw new Error("Error al intentar convertir: "+token.image +" en un numero.");
+				}
 			}
-			return total;
 		}
 	}
 
@@ -199,8 +213,7 @@ void block():
 {
   "("
   	<BLOCK>
-  	(
-  	 command(salidaS)"\n"  	)+
+  	 command(salidaS)
   ")"
 }
 
@@ -211,8 +224,7 @@ void repeat():
   <REPEAT>
    numero()
   "["
-  	(  	  command(salidaS) "\n"
-  	)+
+    command(salidaS)
   "]"
 }
 
@@ -221,22 +233,71 @@ void conditional():
 }
 {
   <IF>
-  <BLOCKED>
-  "["
-    (     command(salidaS) "\n"
-    )+
+  <BLOCKEDP>
+  "["     command(salidaS)
   "]"
   
 }
 
-//void define():
+void define():
+{
+  String name="";
+  Integer value;
+}
+{
+  <DEFINE>
+  <VARIABLE>
+  {
+    name = token.image;
+  }
+  <NUMERO>
+  {
+    try {
+      value = Integer.parseInt(token.image);
+    }
+    catch(Exception e) {
+      throw new ParseException("Una variable solo puede guardar numeros");
+    }
+    userVals.put(name, value);
+  }
+  
+}
+
+void function():
+{
+  String name = "";
+  LinkedList<String> params = new LinkedList<String>();
+}
+{
+  <TO>
+  <VARIABLE>
+  {
+    name = token.image;
+  }
+  (
+    ":"<VARIABLE>
+    { 
+     params.add(":"+token.image);
+    }  )*
+  {
+    //retorna el viejo valor (si ya habia uno con esa misma key) y null si es la primera vez que se inserta.
+    if(functions.put(name,params)!=null) {
+      throw new ParseException("La funcion: "+ name +" ya fue previamente definida.");
+    }
+  }
+  <OUTPUT>
+  command(salidaS)
+  <END>
+}
+
+//void userDefinitions():
 //{
 //}
 //{
-//}
-//
-//void function():
-//{
-//}
-//{
+//  {
+//    System.out.println(token.image.split(" ")[0]);
+////    if(userVals.get(token.image.split(" ")[0])==null && functions.get(token.image.split(" ")[0])==null) {
+////      
+////    }
+//  }
 //}

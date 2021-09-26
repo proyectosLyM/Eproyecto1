@@ -1,0 +1,208 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */options{
+  LOOKAHEAD = 2;  static = false;}PARSER_BEGIN(robot)package pruebaslenguaje;
+import java.util.HashMap;
+import java.util.LinkedList;
+public class robot{
+
+  /* mapa para guardar las variables globales durante la ejecucion del programa */
+  private HashMap<String, Integer > userVals = new HashMap< String, Integer>();
+/* mapa para guardar las definiciones de las funciones y sus parametros*/
+  private HashMap<String,LinkedList<String>> functions = new HashMap<String,LinkedList<String>>();
+    
+  public static void main(String args []) throws ParseException  {    robot parser = new robot(System.in);    while (true)    {      System.out.println("Reading from standard input...");      System.out.print("Enter an robot expression:");      try      {        parser.command();      }      catch (Exception e)      {        System.out.println("NOK.");        System.out.println(e.getMessage());
+        e.printStackTrace();        break;
+      }      catch (Error e)      {        System.out.println("Oops.");        System.out.println(e.getMessage());
+        e.printStackTrace();        break;      }    }  }}PARSER_END(robot)SKIP:
+{
+		" "
+	|	"\r"
+	|	"\t"
+}
+
+/* Definicion de comandos basicos */
+TOKEN: 
+{
+		   <MOVE :  "MOVE">
+		|  <RIGHT: "RIGHT">
+		|  <LEFT: "LEFT">
+		|  <ROTATE: "ROTATE">
+		|  < LOOK: "LOOK" >
+		|  < N : "N" >
+		|  < E : "E" >
+		|  < W : "W" >
+		|  < S : "S" >
+		|  < DROP : "DROP" >
+		|  < FREE : "FREE" >
+		|  < PICK : "PICK" >
+		|  < POP : "POP" >
+		|  < CHECK : "CHECK" >
+		|  < C : "C" >
+		|  < B : "B" >
+		|  < BLOCKEDP : "BLOCKEDP" >
+		|  < NOP : "NOP" >
+		|  < BLOCK : "BLOCK" >
+		|  < REPEAT : "REPEAT" >
+		|  < IF : "IF" >
+		|  < DEFINE : "DEFINE" >
+		|  < TO : "TO" >
+		|  < OUTPUT : "OUTPUT" >
+		|  < END : "END" >
+}
+
+TOKEN :
+{
+		<NUMERO: (<DIGIT>)+ >
+	    | <VARIABLE : (< LETTER >)+>
+		| <#DIGIT: ["0"-"9"] >
+		| <#LETTER: ["a"-"z"]>
+} 
+
+
+//-----------------------------------------------------------------------------------------------
+
+void command():
+	{		
+	}
+	{
+		(
+			(			(    
+			   <MOVE>   numero()
+	    	|  <RIGHT>  numero()
+			|  <LEFT>   numero()
+			|  <ROTATE> numero()
+			|  <DROP>   numero()
+			|  <FREE>   numero()
+			|  <PICK>   numero()
+		    |  <POP>    numero()
+		    |  <BLOCKEDP>
+		    |  <NOP>
+		    |  <LOOK>   ("N"|"E"|"W"|"S")
+		    |  <CHECK>  ("C"|"B") numero()
+		    |  block()
+		    |  repeat()
+		    |  conditional()
+		    |  define()
+		    |  function()
+//		    |  userDefinitions()
+			) "\n")
+		|  "\n"
+        )+
+	}
+
+/**
+* reconoce un numero entero sin signo
+* @return el valor entero correspondiente al valor reconocido
+* VERIFICA SI LA ENTRADA ES UN NUMERO O UNA VARIABLE PREVIAMENTE DEFINIDA POR EL USUARIO.
+*/
+int numero() throws Error:
+	{	
+		Integer total;
+	}
+	{
+		(<NUMERO>| <VARIABLE>)
+		{
+		  	// si entra al if el numero esta definido por medio de una variable.
+		  	total = userVals.get(token.image);
+		  	if(total!=null) {
+		  	  return total;
+		  	}
+		  	//si no entonces debe ser un numero explicito.
+		  	else {
+		  	  	try 
+				{
+					total = Integer.parseInt(token.image);
+					return total;
+				} 
+				catch (Exception e) 
+				{
+				  throw new Error("Error al intentar convertir: "+token.image +" en un numero.");
+				}
+			}
+		}
+	}
+
+void block():
+{
+}
+{
+  "("
+  	<BLOCK>  	command()
+  ")"
+}
+
+void repeat():
+{
+}
+{
+  <REPEAT>
+   numero()
+  "["
+   command()
+  "]"
+}
+
+void conditional():
+{
+}
+{
+  <IF>
+  <BLOCKEDP>
+  "["
+   command()
+  "]"
+  
+}
+
+void define():
+{
+  String name="";
+  Integer value;
+}
+{
+  <DEFINE>
+  <VARIABLE>
+  {
+    name = token.image;
+  }
+  <NUMERO>
+  {
+    try {
+      value = Integer.parseInt(token.image);
+    }
+    catch(Exception e) {
+      throw new ParseException("Una variable solo puede guardar numeros");
+    }
+    userVals.put(name, value);
+  }
+  
+}
+
+void function():
+{
+  String name = "";
+  LinkedList<String> params = new LinkedList<String>();
+}
+{
+  <TO>
+  <VARIABLE>
+  {
+    name = token.image;
+  }
+  (
+    ":"<VARIABLE>
+    { 
+     params.add(":"+token.image);
+    }
+  )*
+  {
+    //retorna el viejo valor (si ya habia uno con esa misma key) y null si es la primera vez que se inserta.
+    if(functions.put(name,params)!=null) {
+      throw new ParseException("La funcion: "+ name +" ya fue previamente definida.");
+    }
+  }
+  <OUTPUT>
+  command()
+  <END>
+}

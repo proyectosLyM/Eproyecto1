@@ -90,14 +90,17 @@ public class Interpreter   {
 		}  catch(ParseException pex) {		
 			//System.out.println(mundo.getValueStack());
 			salida.append("Error de sintaxis:"+pex.getMessage()+" \n--> ");
+			pex.printStackTrace(); //BORRAR
 			//mundo.cleanTemp();
 		} catch (Error err) {
 			//		 System.out.println("stack: "+mundo.getValueStack());
 			salida.append("Error "+err.getMessage()+" \n--> ");
+			err.printStackTrace(); //BORRAR
 			//	 mundo.cleanTemp();
 		} catch (Exception error) {
 			// System.out.println(mundo.getValueStack());
 			salida.append("Error de ejecuci�n"+error.getStackTrace()+" \n--> ");
+			error.printStackTrace(); //BORRAR
 			//mundo.cleanTemp();
 		}
 		return salida+" End Input \n";
