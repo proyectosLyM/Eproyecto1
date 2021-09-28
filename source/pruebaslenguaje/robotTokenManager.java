@@ -34,13 +34,13 @@ private int jjMoveStringLiteralDfa0_0()
    switch(curChar)
    {
       case 10:
-         return jjStopAtPos(0, 33);
-      case 40:
          return jjStopAtPos(0, 34);
-      case 41:
+      case 33:
+         return jjStopAtPos(0, 39);
+      case 40:
          return jjStopAtPos(0, 35);
-      case 58:
-         return jjStopAtPos(0, 38);
+      case 41:
+         return jjStopAtPos(0, 36);
       case 66:
          jjmatchedKind = 19;
          return jjMoveStringLiteralDfa1_0(0x500000L);
@@ -76,9 +76,9 @@ private int jjMoveStringLiteralDfa0_0()
       case 87:
          return jjStopAtPos(0, 11);
       case 91:
-         return jjStopAtPos(0, 36);
-      case 93:
          return jjStopAtPos(0, 37);
+      case 93:
+         return jjStopAtPos(0, 38);
       default :
          return jjMoveNfa_0(2, 0);
    }
@@ -307,7 +307,7 @@ private int jjMoveStringLiteralDfa7_0(long old0, long active0)
 private int jjMoveNfa_0(int startState, int curPos)
 {
    int startsAt = 0;
-   jjnewStateCnt = 2;
+   jjnewStateCnt = 4;
    int i = 1;
    jjstateSet[0] = startState;
    int kind = 0x7fffffff;
@@ -323,6 +323,15 @@ private int jjMoveNfa_0(int startState, int curPos)
             switch(jjstateSet[--i])
             {
                case 2:
+                  if ((0x3ff000000000000L & l) != 0L)
+                  {
+                     if (kind > 29)
+                        kind = 29;
+                     jjCheckNAdd(0);
+                  }
+                  else if (curChar == 58)
+                     jjstateSet[jjnewStateCnt++] = 3;
+                  break;
                case 0:
                   if ((0x3ff000000000000L & l) == 0L)
                      break;
@@ -344,8 +353,16 @@ private int jjMoveNfa_0(int startState, int curPos)
                case 1:
                   if ((0x7fffffe00000000L & l) == 0L)
                      break;
-                  kind = 30;
+                  if (kind > 30)
+                     kind = 30;
                   jjCheckNAdd(1);
+                  break;
+               case 3:
+                  if ((0x7fffffe00000000L & l) == 0L)
+                     break;
+                  if (kind > 31)
+                     kind = 31;
+                  jjstateSet[jjnewStateCnt++] = 3;
                   break;
                default : break;
             }
@@ -370,7 +387,7 @@ private int jjMoveNfa_0(int startState, int curPos)
          kind = 0x7fffffff;
       }
       ++curPos;
-      if ((i = jjnewStateCnt) == (startsAt = 2 - (jjnewStateCnt = startsAt)))
+      if ((i = jjnewStateCnt) == (startsAt = 4 - (jjnewStateCnt = startsAt)))
          return curPos;
       try { curChar = input_stream.readChar(); }
       catch(java.io.IOException e) { return curPos; }
@@ -386,22 +403,22 @@ public static final String[] jjstrLiteralImages = {
 "\123", "\104\122\117\120", "\106\122\105\105", "\120\111\103\113", "\120\117\120", 
 "\103\110\105\103\113", "\103", "\102", "\102\114\117\103\113\105\104\120", "\116\117\120", 
 "\102\114\117\103\113", "\122\105\120\105\101\124", "\111\106", "\104\105\106\111\116\105", 
-"\124\117", "\117\125\124\120\125\124", "\105\116\104", null, null, null, null, "\12", 
-"\50", "\51", "\133", "\135", "\72", };
+"\124\117", "\117\125\124\120\125\124", "\105\116\104", null, null, null, null, null, 
+"\12", "\50", "\51", "\133", "\135", "\41", };
 
 /** Lexer state names. */
 public static final String[] lexStateNames = {
    "DEFAULT",
 };
 static final long[] jjtoToken = {
-   0x7e7ffffff1L, 
+   0xfcfffffff1L, 
 };
 static final long[] jjtoSkip = {
    0xeL, 
 };
 protected SimpleCharStream input_stream;
-private final int[] jjrounds = new int[2];
-private final int[] jjstateSet = new int[4];
+private final int[] jjrounds = new int[4];
+private final int[] jjstateSet = new int[8];
 protected char curChar;
 /** Constructor. */
 public robotTokenManager(SimpleCharStream stream){
@@ -428,7 +445,7 @@ private void ReInitRounds()
 {
    int i;
    jjround = 0x80000001;
-   for (i = 2; i-- > 0;)
+   for (i = 4; i-- > 0;)
       jjrounds[i] = 0x80000000;
 }
 

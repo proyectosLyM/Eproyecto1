@@ -65,9 +65,11 @@ public interface robotConstants {
   /** RegularExpression Id. */
   int VARIABLE = 30;
   /** RegularExpression Id. */
-  int DIGIT = 31;
+  int PARAM = 31;
   /** RegularExpression Id. */
-  int LETTER = 32;
+  int DIGIT = 32;
+  /** RegularExpression Id. */
+  int LETTER = 33;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -105,6 +107,7 @@ public interface robotConstants {
     "\"END\"",
     "<NUMERO>",
     "<VARIABLE>",
+    "<PARAM>",
     "<DIGIT>",
     "<LETTER>",
     "\"\\n\"",
@@ -112,7 +115,7 @@ public interface robotConstants {
     "\")\"",
     "\"[\"",
     "\"]\"",
-    "\":\"",
+    "\"!\"",
   };
 
 }

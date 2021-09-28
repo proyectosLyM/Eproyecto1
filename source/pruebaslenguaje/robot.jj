@@ -6,11 +6,13 @@ import java.util.HashMap;
 import java.util.LinkedList;
 public class robot{
 
-  /* mapa para guardar las variables globales durante la ejecucion del programa */
+/* mapa para guardar las variables globales durante la ejecucion del programa */
   private HashMap<String, Integer > userVals = new HashMap< String, Integer>();
 /* mapa para guardar las definiciones de las funciones y sus parametros*/
   private HashMap<String,LinkedList<String>> functions = new HashMap<String,LinkedList<String>>();
-    
+/* referencia a los parametros de la funcion */
+  private LinkedList<String> funparams;
+  
   public static void main(String args []) throws ParseException  {    robot parser = new robot(System.in);    while (true)    {      System.out.println("Reading from standard input...");      System.out.print("Enter an robot expression:");      try      {        parser.command();      }      catch (Exception e)      {        System.out.println("NOK.");        System.out.println(e.getMessage());
         e.printStackTrace();        break;
       }      catch (Error e)      {        System.out.println("Oops.");        System.out.println(e.getMessage());
@@ -55,6 +57,7 @@ TOKEN :
 {
 		<NUMERO: (<DIGIT>)+ >
 	    | <VARIABLE : (< LETTER >)+>
+	    | < PARAM : ":"(< LETTER >)+ >
 		| <#DIGIT: ["0"-"9"] >
 		| <#LETTER: ["a"-"z"]>
 } 
@@ -85,9 +88,10 @@ void command():
 		    |  conditional()
 		    |  define()
 		    |  function()
-//		    |  userDefinitions()
-			) "\n")
-		|  "\n"
+		    |  funcall()
+		    |  varcall()
+			) ("\n")+)
+			|  "\n"
         )+
 	}
 
@@ -101,14 +105,20 @@ int numero() throws Error:
 		Integer total;
 	}
 	{
-		(<NUMERO>| <VARIABLE>)
+		(<NUMERO>|<VARIABLE>|<PARAM>)
 		{
-		  	// si entra al if el numero esta definido por medio de una variable.
+			// busca si el numero es realmente un parametro de una funcion que se esta definiendo.
+		    for (String param : funparams) {  
+		  	  if(param.compareTo(token.image)==0) {
+		  	     return 0;
+		  	    }
+		  	}
+		  	// Mira si el numero esta definido por medio de una variable global definida por el usuario.
 		  	total = userVals.get(token.image);
 		  	if(total!=null) {
 		  	  return total;
 		  	}
-		  	//si no entonces debe ser un numero explicito.
+		  	//si no es ninguna de las anteriores entonces debe ser un numero explicito.
 		  	else {
 		  	  	try 
 				{
@@ -128,7 +138,9 @@ void block():
 }
 {
   "("
-  	<BLOCK>  	command()
+  	<BLOCK>
+   ("\n")*  	  	command()
+   ("\n")*
   ")"
 }
 
@@ -138,8 +150,11 @@ void repeat():
 {
   <REPEAT>
    numero()
+   ("\n")*   
   "["
+   ("\n")*
    command()
+   ("\n")*
   "]"
 }
 
@@ -148,9 +163,12 @@ void conditional():
 }
 {
   <IF>
-  <BLOCKEDP>
+  ("!")? <BLOCKEDP>
+  ("\n")*
   "["
+  ("\n")*
    command()
+  ("\n")*
   "]"
   
 }
@@ -191,9 +209,9 @@ void function():
     name = token.image;
   }
   (
-    ":"<VARIABLE>
+    <PARAM>
     { 
-     params.add(":"+token.image);
+     params.add(token.image);
     }
   )*
   {
@@ -201,8 +219,65 @@ void function():
     if(functions.put(name,params)!=null) {
       throw new ParseException("La funcion: "+ name +" ya fue previamente definida.");
     }
+    funparams = params;
   }
+   ("\n")*
   <OUTPUT>
+   ("\n")*
   command()
+   ("\n")*
   <END>
+  {
+    funparams = null;
+  }
 }
+
+void funcall():
+{
+  int pcount =0;
+}
+{
+  <VARIABLE>
+  {
+    if(functions.get(token.image)==null) {
+      throw new ParseException("mal llamado a funcall(). La funcion que se intenta llamar no ha sido definida.");
+    }
+  }
+  (<NUMERO>
+	{
+	  pcount ++;
+	}
+  )*
+  {
+    if(pcount != functions.get(token.image).size()) {
+      throw new ParseException("El numero de parametros ingresados no concuerda con el numero de parametros\n"+
+      "definidos en la funcion.");
+    }
+  }
+}
+
+void varcall():
+{
+}
+{
+  < VARIABLE>
+  {
+    if(userVals.get(token.image)==null) {
+      throw new ParseException("La variable no ha sido definida.");
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
