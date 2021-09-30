@@ -7,7 +7,7 @@ import java.util.LinkedList;
 public class robot{
 
 /* mapa para guardar las variables globales durante la ejecucion del programa */
-  private HashMap<String, Integer > userVals = new HashMap< String, Integer>();
+  private HashMap<String, Long > userVals = new HashMap< String, Long>();
 /* mapa para guardar las definiciones de las funciones y sus parametros*/
   private HashMap<String,LinkedList<String>> functions = new HashMap<String,LinkedList<String>>();
 /* referencia a los parametros de la funcion */
@@ -100,19 +100,21 @@ void command():
 * @return el valor entero correspondiente al valor reconocido
 * VERIFICA SI LA ENTRADA ES UN NUMERO O UNA VARIABLE PREVIAMENTE DEFINIDA POR EL USUARIO.
 */
-int numero() throws Error:
+Long numero() throws Error:
 	{	
-		Integer total;
+		Long total;
 	}
 	{
 		(<NUMERO>|<VARIABLE>|<PARAM>)
 		{
 			// busca si el numero es realmente un parametro de una funcion que se esta definiendo.
-		    for (String param : funparams) {  
+			if(funparams != null) {
+			  for (String param : funparams) {  
 		  	  if(param.compareTo(token.image)==0) {
-		  	     return 0;
+		  	     return (long) 0;
 		  	    }
-		  	}
+		  	  }
+			}
 		  	// Mira si el numero esta definido por medio de una variable global definida por el usuario.
 		  	total = userVals.get(token.image);
 		  	if(total!=null) {
@@ -122,7 +124,7 @@ int numero() throws Error:
 		  	else {
 		  	  	try 
 				{
-					total = Integer.parseInt(token.image);
+					total = Long.parseLong(token.image);
 					return total;
 				} 
 				catch (Exception e) 
@@ -167,7 +169,7 @@ void conditional():
   ("\n")*
   "["
   ("\n")*
-   command()
+  command()
   ("\n")*
   "]"
   
@@ -176,7 +178,7 @@ void conditional():
 void define():
 {
   String name="";
-  Integer value;
+  Long value;
 }
 {
   <DEFINE>
@@ -187,7 +189,7 @@ void define():
   <NUMERO>
   {
     try {
-      value = Integer.parseInt(token.image);
+      value = Long.parseLong(token.image);
     }
     catch(Exception e) {
       throw new ParseException("Una variable solo puede guardar numeros");
@@ -235,13 +237,15 @@ void function():
 void funcall():
 {
   int pcount =0;
+  String tokenImage = "";
 }
 {
   <VARIABLE>
   {
     if(functions.get(token.image)==null) {
-      throw new ParseException("mal llamado a funcall(). La funcion que se intenta llamar no ha sido definida.");
+      throw new ParseException("Bad input. Si es un llamado a funcall(), La funcion que se intenta llamar no ha sido definida.");
     }
+    tokenImage = token.image;
   }
   (<NUMERO>
 	{
@@ -249,7 +253,7 @@ void funcall():
 	}
   )*
   {
-    if(pcount != functions.get(token.image).size()) {
+    if(pcount != functions.get(tokenImage).size()) {
       throw new ParseException("El numero de parametros ingresados no concuerda con el numero de parametros\n"+
       "definidos en la funcion.");
     }
@@ -268,7 +272,35 @@ void varcall():
   }
 }
 
-
+/* el proposito de este metodo es unicamente el de permitir command()] o command())
+sin requerir el salto de linea.
+*/
+void basicCommand():
+{
+}
+{
+  	(    
+	   <MOVE>   numero()
+   	|  <RIGHT>  numero()
+	|  <LEFT>   numero()
+	|  <ROTATE> numero()
+	|  <DROP>   numero()
+	|  <FREE>   numero()
+	|  <PICK>   numero()
+    |  <POP>    numero()
+    |  <BLOCKEDP>
+    |  <NOP>
+    |  <LOOK>   ("N"|"E"|"W"|"S")
+    |  <CHECK>  ("C"|"B") numero()
+    |  block()
+    |  repeat()
+    |  conditional()
+    |  define()
+    |  function()
+    |  funcall()
+    |  varcall()
+	)
+}
 
 
 
