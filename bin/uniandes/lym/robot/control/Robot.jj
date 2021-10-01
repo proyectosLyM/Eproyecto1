@@ -20,7 +20,7 @@ Abril: 2008 - Simplificado apra solo interpretaci�n
 
 options 
 {
-	LOOKAHEAD=2; 
+	LOOKAHEAD=4; 
 	IGNORE_CASE=true;
 	STATIC = false;
 	
@@ -42,9 +42,11 @@ import java.util.HashMap;
 public class Robot 
 {
 /* mapa para guardar las variables globales durante la ejecucion del programa */
-	private HashMap<String, Integer > userVals = new HashMap< String, Integer>();
+  private HashMap<String, Long > userVals = new HashMap< String, Long>();
 /* mapa para guardar las definiciones de las funciones y sus parametros*/
-    private HashMap<String,LinkedList<String>> functions = new HashMap<String,LinkedList<String>>();
+  private HashMap<String,LinkedList<String>> functions = new HashMap<String,LinkedList<String>>();
+/* referencia a los parametros de la funcion */
+  private LinkedList<String> funparams;
 /* referencia al mundo del robot*/
 	private RobotWorldDec world;
 /* String de salidas del parsers*/
@@ -101,10 +103,10 @@ TOKEN :
 {
 		<NUMERO: (<DIGIT>)+ >
 	    | <VARIABLE : (< LETTER >)+>
+	    | < PARAM : ":"(< LETTER >)+ >
 		| <#DIGIT: ["0"-"9"] >
 		| <#LETTER: ["a"-"z"]>
-} 
-
+}
 
 //-----------------------------------------------------------------------------------------------
 
@@ -118,17 +120,17 @@ boolean command(StringBuffer sistema):
 		}
 	}
 	{
-		 (
-		    (
+		(
+			(
 			(    
-			   <MOVE>   numero() //{world.moveForward(x);salida = "Command: Moveforward ";}  
-	    	|  <RIGHT>  numero() //{world.turnRight();salida = "Command: Turnright";}
+			   <MOVE>   numero()
+	    	|  <RIGHT>  numero()
 			|  <LEFT>   numero()
 			|  <ROTATE> numero()
 			|  <DROP>   numero()
 			|  <FREE>   numero()
 			|  <PICK>   numero()
-		    |  <POP>    numero() //{world.popBalloons(x); salida = "Comando:  Pop";}
+		    |  <POP>    numero()
 		    |  <BLOCKEDP>
 		    |  <NOP>
 		    |  <LOOK>   ("N"|"E"|"W"|"S")
@@ -138,9 +140,10 @@ boolean command(StringBuffer sistema):
 		    |  conditional()
 		    |  define()
 		    |  function()
-//		    |  userDefinitions()
-			) "\n")
-     	|  "\n"
+		    |  funcall()
+		    |  varcall()
+			) ("\n")+)
+			|  "\n"
         )+
 		{
 		  //  try {
@@ -180,23 +183,31 @@ boolean command(StringBuffer sistema):
 * @return el valor entero correspondiente al valor reconocido
 * VERIFICA SI LA ENTRADA ES UN NUMERO O UNA VARIABLE PREVIAMENTE DEFINIDA POR EL USUARIO.
 */
-int numero() throws Error:
+Long numero() throws Error:
 	{	
-		Integer total;
+		Long total;
 	}
 	{
-		(<NUMERO>| <VARIABLE>)
+		(<NUMERO>|<VARIABLE>|<PARAM>)
 		{
-		  	// si entra al if el numero esta definido por medio de una variable.
+			// busca si el numero es realmente un parametro de una funcion que se esta definiendo.
+			if(funparams != null) {
+			  for (String param : funparams) {  
+		  	  if(param.compareTo(token.image)==0) {
+		  	     return (long) 0;
+		  	    }
+		  	  }
+			}
+		  	// Mira si el numero esta definido por medio de una variable global definida por el usuario.
 		  	total = userVals.get(token.image);
 		  	if(total!=null) {
 		  	  return total;
 		  	}
-		  	//si no entonces debe ser un numero explicito.
+		  	//si no es ninguna de las anteriores entonces debe ser un numero explicito.
 		  	else {
 		  	  	try 
 				{
-					total = Integer.parseInt(token.image);
+					total = Long.parseLong(token.image);
 					return total;
 				} 
 				catch (Exception e) 
@@ -212,8 +223,10 @@ void block():
 }
 {
   "("
-  	<BLOCK>
-  	 command(salidaS)
+    <BLOCK>
+   ("\n")*
+   (command(salidaS))?
+   basicCommand()
   ")"
 }
 
@@ -223,8 +236,11 @@ void repeat():
 {
   <REPEAT>
    numero()
+   ("\n")*   
   "["
-    command(salidaS)
+   ("\n")*
+   (command(salidaS))?
+   basicCommand()
   "]"
 }
 
@@ -233,8 +249,12 @@ void conditional():
 }
 {
   <IF>
-  <BLOCKEDP>
-  "["     command(salidaS)
+  ("!")? <BLOCKEDP>
+  ("\n")*
+  "["
+  ("\n")*
+   (command(salidaS))?
+   basicCommand()
   "]"
   
 }
@@ -242,7 +262,7 @@ void conditional():
 void define():
 {
   String name="";
-  Integer value;
+  Long value;
 }
 {
   <DEFINE>
@@ -253,7 +273,7 @@ void define():
   <NUMERO>
   {
     try {
-      value = Integer.parseInt(token.image);
+      value = Long.parseLong(token.image);
     }
     catch(Exception e) {
       throw new ParseException("Una variable solo puede guardar numeros");
@@ -275,29 +295,99 @@ void function():
     name = token.image;
   }
   (
-    ":"<VARIABLE>
+    <PARAM>
     { 
-     params.add(":"+token.image);
-    }  )*
+     params.add(token.image);
+    }
+  )*
   {
     //retorna el viejo valor (si ya habia uno con esa misma key) y null si es la primera vez que se inserta.
     if(functions.put(name,params)!=null) {
       throw new ParseException("La funcion: "+ name +" ya fue previamente definida.");
     }
+    funparams = params;
   }
+   ("\n")*
   <OUTPUT>
+   ("\n")*
   command(salidaS)
+   ("\n")*
   <END>
+  {
+    funparams = null;
+  }
 }
 
-//void userDefinitions():
-//{
-//}
-//{
-//  {
-//    System.out.println(token.image.split(" ")[0]);
-////    if(userVals.get(token.image.split(" ")[0])==null && functions.get(token.image.split(" ")[0])==null) {
-////      
-////    }
-//  }
-//}
+void funcall():
+{
+  int pcount =0;
+  String tokenImage = "";
+}
+{
+  <VARIABLE>
+  {
+    if(functions.get(token.image)==null) {
+      throw new ParseException("Bad input. Si es un llamado a funcall(), La funcion que se intenta llamar no ha sido definida.");
+    }
+    tokenImage = token.image;
+  }
+  (<NUMERO>
+	{
+	  pcount ++;
+	}
+  )*
+  {
+    if(pcount != functions.get(tokenImage).size()) {
+      throw new ParseException("El numero de parametros ingresados no concuerda con el numero de parametros\n"+
+      "definidos en la funcion.");
+    }
+  }
+}
+
+void varcall():
+{
+}
+{
+  < VARIABLE>
+  {
+    if(userVals.get(token.image)==null) {
+      throw new ParseException("La variable no ha sido definida.");
+    }
+  }
+}
+
+/* el proposito de este metodo es unicamente el de permitir command()] o command())
+sin requerir el salto de linea.
+*/
+void basicCommand():
+{
+}
+{
+  	(    
+	   <MOVE>   numero()
+   	|  <RIGHT>  numero()
+	|  <LEFT>   numero()
+	|  <ROTATE> numero()
+	|  <DROP>   numero()
+	|  <FREE>   numero()
+	|  <PICK>   numero()
+    |  <POP>    numero()
+    |  <BLOCKEDP>
+    |  <NOP>
+    |  <LOOK>   ("N"|"E"|"W"|"S")
+    |  <CHECK>  ("C"|"B") numero()
+    |  block()
+    |  repeat()
+    |  conditional()
+    |  define()
+    |  function()
+    |  funcall()
+    |  varcall()
+	)|("\n")* 
+}
+
+
+
+
+
+

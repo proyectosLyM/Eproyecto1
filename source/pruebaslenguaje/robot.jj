@@ -1,7 +1,7 @@
 /**
  * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
  */options{
-  LOOKAHEAD = 2;  static = false;}PARSER_BEGIN(robot)package pruebaslenguaje;
+  LOOKAHEAD = 4;  static = false;}PARSER_BEGIN(robot)package pruebaslenguaje;
 import java.util.HashMap;
 import java.util.LinkedList;
 public class robot{
@@ -140,9 +140,9 @@ void block():
 }
 {
   "("
-  	<BLOCK>
-   ("\n")*  	  	command()
-   ("\n")*
+    <BLOCK>
+   ("\n")*   (command())?
+   basicCommand()
   ")"
 }
 
@@ -155,8 +155,8 @@ void repeat():
    ("\n")*   
   "["
    ("\n")*
-   command()
-   ("\n")*
+   (command())?
+   basicCommand()
   "]"
 }
 
@@ -169,8 +169,8 @@ void conditional():
   ("\n")*
   "["
   ("\n")*
-  command()
-  ("\n")*
+   (command())?
+   basicCommand()
   "]"
   
 }
@@ -299,7 +299,7 @@ void basicCommand():
     |  function()
     |  funcall()
     |  varcall()
-	)
+	)|("\n")* 
 }
 
 
