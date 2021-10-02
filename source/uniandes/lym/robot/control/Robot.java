@@ -10,6 +10,7 @@ import java.util.HashMap;
 
 @SuppressWarnings("serial")
 public class Robot implements RobotConstants {
+
 /* mapa para guardar las variables globales durante la ejecucion del programa */
   private HashMap<String, Long > userVals = new HashMap< String, Long>();
 /* mapa para guardar las definiciones de las funciones y sus parametros*/
@@ -29,7 +30,11 @@ public class Robot implements RobotConstants {
                 world = (RobotWorldDec) w;
         }
 
-//-----------------------------------------------------------------------------------------------
+//------------------------------REGLAS DE PRODUCCION----------------------------------
+
+/**
+* Aqui empieza el programa. 
+*/
   final public boolean command(StringBuffer sistema) throws ParseException {
                 int x;
                 salida=new String();
@@ -150,6 +155,11 @@ public class Robot implements RobotConstants {
     throw new Error("Missing return statement in function");
   }
 
+/*
+Este codigo vino con el archivo original. Sin Embargo, no se utilizo
+entonces esta comentado.
+*/
+
 //void objetoPoner() :
 //	{
 //		int f=1;	
@@ -216,6 +226,9 @@ public class Robot implements RobotConstants {
     throw new Error("Missing return statement in function");
   }
 
+/**
+* Regla de produccion para la definicion del comando BLOCK
+*/
   final public void block() throws ParseException {
     jj_consume_token(35);
     jj_consume_token(BLOCK);
@@ -237,6 +250,9 @@ public class Robot implements RobotConstants {
     jj_consume_token(36);
   }
 
+/**
+* Regla de produccion para la definicion del comando REPEAT
+*/
   final public void repeat() throws ParseException {
     jj_consume_token(REPEAT);
     numero();
@@ -268,6 +284,9 @@ public class Robot implements RobotConstants {
     jj_consume_token(38);
   }
 
+/**
+* Regla de produccion para la definicion del comando IF
+*/
   final public void conditional() throws ParseException {
     jj_consume_token(IF);
     if (jj_2_40(4)) {
@@ -304,6 +323,9 @@ public class Robot implements RobotConstants {
     jj_consume_token(38);
   }
 
+/**
+* Regla de produccion para la definicion del comando DEFINE
+*/
   final public void define() throws ParseException {
   String name="";
   Long value;
@@ -320,6 +342,9 @@ public class Robot implements RobotConstants {
     userVals.put(name, value);
   }
 
+/**
+* Regla de produccion para la definicion del comando TO ... OUTPUT ... END
+*/
   final public void function() throws ParseException {
   String name = "";
   LinkedList<String> params = new LinkedList<String>();
@@ -374,6 +399,9 @@ public class Robot implements RobotConstants {
     funparams = null;
   }
 
+/**
+* Regla de produccion para la definicion de llamados a funciones.
+*/
   final public void funcall() throws ParseException {
   int pcount =0;
   String tokenImage = "";
@@ -398,6 +426,9 @@ public class Robot implements RobotConstants {
     }
   }
 
+/**
+* Regla de produccion para la definicion de llamados a variables.
+*/
   final public void varcall() throws ParseException {
     jj_consume_token(VARIABLE);
     if(userVals.get(token.image)==null) {
@@ -405,8 +436,9 @@ public class Robot implements RobotConstants {
     }
   }
 
-/* el proposito de este metodo es unicamente el de permitir command()] o command())
-sin requerir el salto de linea.
+/**
+* El proposito de este metodo es unicamente el de permitir command()] o command())
+* sin requerir el salto de linea.
 */
   final public void basicCommand() throws ParseException {
     if (jj_2_75(4)) {
@@ -1019,11 +1051,6 @@ sin requerir el salto de linea.
     finally { jj_save(74, xla); }
   }
 
-  private boolean jj_3_4() {
-    if (jj_scan_token(S)) return true;
-    return false;
-  }
-
   private boolean jj_3_3() {
     if (jj_scan_token(W)) return true;
     return false;
@@ -1064,6 +1091,11 @@ sin requerir el salto de linea.
     return false;
   }
 
+  private boolean jj_3_48() {
+    if (jj_scan_token(NUMERO)) return true;
+    return false;
+  }
+
   private boolean jj_3_25() {
     if (jj_3R_21()) return true;
     return false;
@@ -1089,13 +1121,18 @@ sin requerir el salto de linea.
     return false;
   }
 
-  private boolean jj_3R_21() {
-    if (jj_scan_token(VARIABLE)) return true;
+  private boolean jj_3_20() {
+    if (jj_3R_16()) return true;
     return false;
   }
 
-  private boolean jj_3_20() {
-    if (jj_3R_16()) return true;
+  private boolean jj_3R_20() {
+    if (jj_scan_token(VARIABLE)) return true;
+    Token xsp;
+    while (true) {
+      xsp = jj_scanpos;
+      if (jj_3_48()) { jj_scanpos = xsp; break; }
+    }
     return false;
   }
 
@@ -1261,14 +1298,24 @@ sin requerir el salto de linea.
     return false;
   }
 
+  private boolean jj_3_47() {
+    if (jj_scan_token(34)) return true;
+    return false;
+  }
+
   private boolean jj_3_8() {
     if (jj_scan_token(RIGHT)) return true;
     if (jj_3R_14()) return true;
     return false;
   }
 
-  private boolean jj_3_48() {
-    if (jj_scan_token(NUMERO)) return true;
+  private boolean jj_3_46() {
+    if (jj_scan_token(34)) return true;
+    return false;
+  }
+
+  private boolean jj_3_45() {
+    if (jj_scan_token(34)) return true;
     return false;
   }
 
@@ -1289,31 +1336,6 @@ sin requerir el salto de linea.
       xsp = jj_scanpos;
       if (jj_3_29()) { jj_scanpos = xsp; break; }
     }
-    return false;
-  }
-
-  private boolean jj_3R_20() {
-    if (jj_scan_token(VARIABLE)) return true;
-    Token xsp;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3_48()) { jj_scanpos = xsp; break; }
-    }
-    return false;
-  }
-
-  private boolean jj_3_47() {
-    if (jj_scan_token(34)) return true;
-    return false;
-  }
-
-  private boolean jj_3_46() {
-    if (jj_scan_token(34)) return true;
-    return false;
-  }
-
-  private boolean jj_3_45() {
-    if (jj_scan_token(34)) return true;
     return false;
   }
 
@@ -1425,6 +1447,11 @@ sin requerir el salto de linea.
     return false;
   }
 
+  private boolean jj_3_52() {
+    if (jj_scan_token(S)) return true;
+    return false;
+  }
+
   private boolean jj_3_36() {
     if (jj_3R_22()) return true;
     return false;
@@ -1435,8 +1462,8 @@ sin requerir el salto de linea.
     return false;
   }
 
-  private boolean jj_3_34() {
-    if (jj_scan_token(PARAM)) return true;
+  private boolean jj_3_51() {
+    if (jj_scan_token(W)) return true;
     return false;
   }
 
@@ -1455,41 +1482,8 @@ sin requerir el salto de linea.
     return false;
   }
 
-  private boolean jj_3_33() {
-    if (jj_scan_token(VARIABLE)) return true;
-    return false;
-  }
-
-  private boolean jj_3_52() {
-    if (jj_scan_token(S)) return true;
-    return false;
-  }
-
-  private boolean jj_3_51() {
-    if (jj_scan_token(W)) return true;
-    return false;
-  }
-
-  private boolean jj_3_32() {
-    if (jj_scan_token(NUMERO)) return true;
-    return false;
-  }
-
   private boolean jj_3_54() {
     if (jj_scan_token(B)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_14() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3_32()) {
-    jj_scanpos = xsp;
-    if (jj_3_33()) {
-    jj_scanpos = xsp;
-    if (jj_3_34()) return true;
-    }
-    }
     return false;
   }
 
@@ -1500,6 +1494,11 @@ sin requerir el salto de linea.
 
   private boolean jj_3_74() {
     if (jj_scan_token(34)) return true;
+    return false;
+  }
+
+  private boolean jj_3_34() {
+    if (jj_scan_token(PARAM)) return true;
     return false;
   }
 
@@ -1549,6 +1548,11 @@ sin requerir el salto de linea.
 
   private boolean jj_3_68() {
     if (jj_3R_16()) return true;
+    return false;
+  }
+
+  private boolean jj_3_33() {
+    if (jj_scan_token(VARIABLE)) return true;
     return false;
   }
 
@@ -1644,6 +1648,24 @@ sin requerir el salto de linea.
     return false;
   }
 
+  private boolean jj_3_32() {
+    if (jj_scan_token(NUMERO)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_14() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3_32()) {
+    jj_scanpos = xsp;
+    if (jj_3_33()) {
+    jj_scanpos = xsp;
+    if (jj_3_34()) return true;
+    }
+    }
+    return false;
+  }
+
   private boolean jj_3R_23() {
     Token xsp;
     xsp = jj_scanpos;
@@ -1712,6 +1734,16 @@ sin requerir el salto de linea.
     }
     }
     }
+    return false;
+  }
+
+  private boolean jj_3R_21() {
+    if (jj_scan_token(VARIABLE)) return true;
+    return false;
+  }
+
+  private boolean jj_3_4() {
+    if (jj_scan_token(S)) return true;
     return false;
   }
 

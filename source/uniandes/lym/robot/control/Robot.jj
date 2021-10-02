@@ -32,7 +32,6 @@ options
 	STATIC = false;
 	
 }
-   
 
 PARSER_BEGIN(Robot)
 
@@ -48,6 +47,7 @@ import java.util.HashMap;
 @SuppressWarnings("serial")
 public class Robot 
 {
+  
 /* mapa para guardar las variables globales durante la ejecucion del programa */
   private HashMap<String, Long > userVals = new HashMap< String, Long>();
 /* mapa para guardar las definiciones de las funciones y sus parametros*/
@@ -115,8 +115,11 @@ TOKEN :
 		| <#LETTER: ["a"-"z"]>
 }
 
-//-----------------------------------------------------------------------------------------------
+//------------------------------REGLAS DE PRODUCCION----------------------------------
 
+/**
+* Aqui empieza el programa. 
+*/
 boolean command(StringBuffer sistema):
 	{		
 		int x;
@@ -163,6 +166,11 @@ boolean command(StringBuffer sistema):
 		}
 	    | <EOF> {return false; }
 	}
+
+/*
+Este codigo vino con el archivo original. Sin Embargo, no se utilizo
+entonces esta comentado.
+*/
 
 //void objetoPoner() :
 //	{
@@ -225,6 +233,9 @@ Long numero() throws Error:
 		}
 	}
 
+/**
+* Regla de produccion para la definicion del comando BLOCK
+*/
 void block():
 {
 }
@@ -237,6 +248,9 @@ void block():
   ")"
 }
 
+/**
+* Regla de produccion para la definicion del comando REPEAT
+*/
 void repeat():
 {
 }
@@ -251,6 +265,9 @@ void repeat():
   "]"
 }
 
+/**
+* Regla de produccion para la definicion del comando IF
+*/
 void conditional():
 {
 }
@@ -266,6 +283,9 @@ void conditional():
   
 }
 
+/**
+* Regla de produccion para la definicion del comando DEFINE
+*/
 void define():
 {
   String name="";
@@ -290,6 +310,9 @@ void define():
   
 }
 
+/**
+* Regla de produccion para la definicion del comando TO ... OUTPUT ... END
+*/
 void function():
 {
   String name = "";
@@ -325,6 +348,9 @@ void function():
   }
 }
 
+/**
+* Regla de produccion para la definicion de llamados a funciones.
+*/
 void funcall():
 {
   int pcount =0;
@@ -351,6 +377,9 @@ void funcall():
   }
 }
 
+/**
+* Regla de produccion para la definicion de llamados a variables.
+*/
 void varcall():
 {
 }
@@ -363,8 +392,9 @@ void varcall():
   }
 }
 
-/* el proposito de este metodo es unicamente el de permitir command()] o command())
-sin requerir el salto de linea.
+/**
+* El proposito de este metodo es unicamente el de permitir command()] o command())
+* sin requerir el salto de linea.
 */
 void basicCommand():
 {
