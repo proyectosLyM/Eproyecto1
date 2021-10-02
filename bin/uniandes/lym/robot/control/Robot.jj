@@ -18,6 +18,13 @@ Modificado por Silvia Takahashi: Cambio en el lenguaje
 Abril: 2008 - Simplificado apra solo interpretaci�n
  **/
 
+/*
+INTEGRANTES DEL PROYECTO:
+
+Juan Andres Jaramillo Penagos. Codigo 201821305.
+Luis Felipe Dussan. 201912308.
+*/
+
 options 
 {
 	LOOKAHEAD=4; 
